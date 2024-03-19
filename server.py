@@ -1,15 +1,15 @@
 import os
 from fastapi import FastAPI, HTTPException, Header, Request
 from openai import OpenAI
+import uvicorn
 from dotenv import load_dotenv, find_dotenv
-
 
 
 class CommuneOpenAIMiner():
 
     def __init__(self, messages):
         super().__init__()
-
+        
         _ = load_dotenv(find_dotenv())
         api_key = os.environ.get("OPENAI_API_KEY")
         self.client = OpenAI(api_key=api_key)
@@ -63,6 +63,7 @@ async def get_page(request: Request):
 
 
 if __name__ == "__main__":
-    import uvicorn
-
-    uvicorn.run(app, host="116.202.171.31", port=8000)
+    _ = load_dotenv(find_dotenv())
+    HOST = os.environ.get("HOST_ADDRESS")
+    PORT = int(os.environ.get("PORT"))
+    uvicorn.run(app, host=HOST, port=PORT)
