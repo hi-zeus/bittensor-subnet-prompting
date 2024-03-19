@@ -8,7 +8,6 @@ from dotenv import load_dotenv, find_dotenv
 
 _ = load_dotenv(find_dotenv())
 
-MODEL = "gpt-3.5-turbo"
 HOST = os.environ.get("HOST_ADDRESS")
 PORT = int(os.environ.get("PORT"))
 API_URL = f"http://{HOST}:{PORT}/prompting"
@@ -34,16 +33,9 @@ def parse_codeblock(text):
                 lines[i] = "<br/>" + line.replace("<", "&lt;").replace(">", "&gt;")
     return "".join(lines)
     
-def predict(inputs, top_p, temperature, chat_counter, chatbot, history, request:gr.Request):
+def predict(inputs, chat_counter, chatbot, history, request:gr.Request):
     payload = {
-        "model": MODEL,
         "messages": [{"role": "user", "content": f"{inputs}"}],
-        "temperature" : 1.0,
-        "top_p":1.0,
-        "n" : 1,
-        "stream": True,
-        "presence_penalty":0,
-        "frequency_penalty":0,
     }
 
     headers = {
@@ -69,22 +61,12 @@ def predict(inputs, top_p, temperature, chat_counter, chatbot, history, request:
         message["content"] = inputs
         messages.append(message)
         payload = {
-            "model": MODEL,
             "messages": messages,
-            "temperature" : temperature,
-            "top_p": top_p,
-            "n" : 1,
-            "stream": True,
-            "presence_penalty":0,
-            "frequency_penalty":0,
         }
 
     chat_counter += 1
 
     history.append(inputs)
-    token_counter = 0 
-    partial_words = "" 
-    counter = 0
 
     try:
         response = requests.post(API_URL, headers=headers, json=payload, stream=True)   
@@ -126,17 +108,14 @@ with gr.Blocks(css = """#col_container { margin-left: auto; margin-right: auto;}
             with gr.Column(scale=3):
                 server_status_code = gr.Textbox(label="Status code from OpenAI server", )
     
-        #inputs, top_p, temperature, top_k, repetition_penalty
-        with gr.Accordion("Parameters", open=False, visible=False):
-            top_p = gr.Slider( minimum=-0, maximum=1.0, value=1.0, step=0.05, interactive=True, label="Top-p (nucleus sampling)",)
-            temperature = gr.Slider( minimum=-0, maximum=5.0, value=1.0, step=0.1, interactive=True, label="Temperature",)
-            chat_counter = gr.Number(value=0, visible=False, precision=0)
+        chat_counter = gr.Number(value=0, visible=False, precision=0)
+        
     
 
 
     inputs.submit(reset_textbox, [], [inputs, b1], queue=False)
-    inputs.submit(predict, [inputs, top_p, temperature, chat_counter, chatbot, state], [chatbot, state, chat_counter, server_status_code, inputs, b1],)  #openai_api_key
+    inputs.submit(predict, [inputs, chat_counter, chatbot, state], [chatbot, state, chat_counter, server_status_code, inputs, b1],)   
     b1.click(reset_textbox, [], [inputs, b1], queue=False)
-    b1.click(predict, [inputs, top_p, temperature, chat_counter, chatbot, state], [chatbot, state, chat_counter, server_status_code, inputs, b1],)  #openai_api_key
+    b1.click(predict, [inputs, chat_counter, chatbot, state], [chatbot, state, chat_counter, server_status_code, inputs, b1],)  
              
     demo.queue(max_size=20, api_open=False).launch(share=True)
