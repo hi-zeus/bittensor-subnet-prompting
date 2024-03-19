@@ -9,7 +9,9 @@ from dotenv import load_dotenv, find_dotenv
 _ = load_dotenv(find_dotenv())
 
 MODEL = "gpt-3.5-turbo"
-API_URL = os.getenv("API_URL")
+HOST = os.environ.get("HOST_ADDRESS")
+PORT = int(os.environ.get("PORT"))
+API_URL = f"http://{HOST}:{PORT}/prompting"
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 
